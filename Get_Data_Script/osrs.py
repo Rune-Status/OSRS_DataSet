@@ -28,6 +28,7 @@ def get_prices_rsbuddy(item_id,granularity):
     URL=base_url+str(granularity)+"/"+str(item_id)+".json"
     r=requests.get(URL)
     data=r.json()
+	
     for i in range(len(data)):
         ts=data[i]["ts"]
         # the timestamp (ts) is definedd in miliseconds, utc only in seconds
@@ -99,7 +100,6 @@ def get_item_from_page(letter,page,osrs):
             try:
                 #write item["id"] & item["name"] to database
                 print(item["id"],item["name"])
-                
                 if osrs==1:
 					# get the prices of the last 180 days for that item
                     get_prices_osrs(item["id"])
