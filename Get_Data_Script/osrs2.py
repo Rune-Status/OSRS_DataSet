@@ -18,21 +18,20 @@ def clean_data(x):
 
 def get_prices_osrs(item_id):
   # Make API request
-  Graph_URL="http://services.runescape.com/m=itemdb_oldschool/api/graph/"
-  URL=Graph_URL+str(item_id)+".json"
+  URL = f'http://services.runescape.com/m=itemdb_oldschool/api/graph/{item_id}.json'
   resp = requests.get(URL)
   # Check if valid response
   if(check_response(resp)): return get_prices_osrs(item_id)
 
   df = pd.DataFrame.from_dict(resp.json()).reset_index()
   df.rename(columns={"index":"ts"},inplace=True)
-  df['ts'] = pd.to_datetime(df['ts'], unit='ms')
+  df['ts'] = int(time.time()) // 60*60+60*1
   df['item_id'] = item_id
+
   return df
 def get_prices_rsbuddy(item_id,granularity):
   # Make API request
-  base_url="https://rsbuddy.com/exchange/graphs/"
-  URL=base_url+str(granularity)+"/"+str(item_id)+".json"
+  URL = f'https://rsbuddy.com/exchange/graphs/{granularity}/{item_id}.json'
   resp=requests.get(URL)
 
   # Check if valid response
@@ -41,16 +40,13 @@ def get_prices_rsbuddy(item_id,granularity):
 
   # Data cleaning
   df = pd.DataFrame.from_dict(resp.json())
-  df['ts'] = pd.to_datetime(df['ts'], unit='ms')
-  df['ts_day'] = df['ts'].apply(lambda x:x.date().strftime('%Y-%m-%d'))
   df['item_id'] = item_id
   
   return df
 
 def get_item_from_page(letter,page):
   # Make API request
-  API_URL="http://services.runescape.com/m=itemdb_oldschool/api/catalogue/items.json?category=1"
-  URL=API_URL+"&alpha="+str(letter)+"&page="+str(page)
+  URL = f'http://services.runescape.com/m=itemdb_oldschool/api/catalogue/items.json?category=1&alpha={letter}&page={page}'
   resp=requests.get(URL)
 
   # Check if valid response
@@ -63,11 +59,13 @@ def get_item_from_page(letter,page):
     df = pd.concat([df, pd.DataFrame.from_dict(item).drop('trend').reset_index()], ignore_index=True)
 
   # Data cleaning
-  df.drop(columns=['icon','icon_large','typeIcon','index'],inplace=True)
+  df.drop(columns=['icon','icon_large','typeIcon','index','description'],inplace=True)
   df['current'] = df['current'].apply(clean_data).astype('float')
   df['today'] = df['today'].apply(clean_data).astype('float')
+  df['ts_today'] = int(time.time()) // 60*60+60*1
   
   return True,df
+
 def run(data_store,path):
   for unicode_letter in range(97,122):
     page=1
@@ -103,11 +101,16 @@ def run(data_store,path):
       page+=1
   data_store.drop_duplicates(keep='last',inplace=True)
   data_store.to_csv('data_store.csv')
+
 path=''
 try:
   data_store = pd.read_csv('data_store.csv')
 except:
   data_store = pd.DataFrame()
-
+try:
+  data_store.drop(columns='Unnamed: 0',inplace=True)
+except:
+  print('No weird columns to to drop')
+  
 run(data_store,path)
 
