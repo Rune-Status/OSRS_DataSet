@@ -31,7 +31,8 @@ def get_player_count(display,interval,total,mid,output,retry=True):
   
   for row in df['osrs']:
     result = result.append({'ts':row[0],'player_count':row[1]},ignore_index=True)
-
+  
+  # result['ts'] = pd.to_datetime(result['ts'], unit='ms')
   result['ts'] = result['ts'].astype(float)
 
   if(output.empty):
@@ -53,6 +54,9 @@ def get_player_count(display,interval,total,mid,output,retry=True):
     return get_player_count(display,interval,total,min(output['ts'])/1000-3600,output,retry=False)
 
   output = pd.concat([output,result],sort=True)
+  print(retry)
+  if(retry):
+    return get_player_count(display,interval,total,min(result['ts'])/1000,output,retry=False)
   return output
 
 display = ['avg','max']
@@ -63,6 +67,7 @@ mid= ts_to_unix(pd.to_datetime(int(time.time()), unit='s').round('15min')) # thi
 if os.path.isfile('player_count.csv'):
     print ("File exist")
     output = pd.read_csv('player_count.csv')
+    output.drop(columns='Unnamed: 0',inplace=True)
     output['player_count'] = output['player_count'].astype(float)
 else:
     print ("File not exist")
@@ -70,5 +75,5 @@ else:
 
 player_count = get_player_count(display,interval,total,mid,output)
 player_count.drop_duplicates(keep='last',inplace=True)
-player_count.to_csv('player_count.csv',index=False)
+player_count.to_csv('player_count.csv')
 print('**done**')
