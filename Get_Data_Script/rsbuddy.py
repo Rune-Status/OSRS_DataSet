@@ -38,7 +38,7 @@ def get_rsbuddy_price(r, item_name, item_id, d):
         if row['ts'] in dts:
             continue
         d.update({i: {
-            'item_name': item_name,
+            'item_name': item_name.replace("'",''),
             'item_id': item_id,
             'ts': row['ts'],
             'overallPrice': row['overallPrice'],
@@ -54,8 +54,7 @@ def get_rsbuddy_price(r, item_name, item_id, d):
 
 def main(granularity=30):
     d = load_data(file_path, file_name)
-    URLS = [[f'https://rsbuddy.com/exchange/graphs/{granularity}/{item.id}.json',
-             item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
+    URLS = [[f'https://rsbuddy.com/exchange/graphs/{granularity}/{item.id}.json',item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
     with concurrent.futures.ProcessPoolExecutor() as executor:
         future_to_url = {executor.submit(
             make_web_call, url[0], url[1], url[2]): url for url in URLS}

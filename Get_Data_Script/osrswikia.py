@@ -39,7 +39,7 @@ def get_wiki_item_price(r, item_name, item_id, d):
         if row_data[0] in dts:
             continue
         if len(row_data) == 3:
-            d.update({f"{i}": {
+            d.update({i: {
                 "ts": row_data[0], 
                 "price": row_data[1],
                 "volume": row_data[2], 
@@ -47,8 +47,13 @@ def get_wiki_item_price(r, item_name, item_id, d):
                 "item_id": item_id
             }})
         if len(row_data) == 2:
-            d.update({f"{i}": {"ts": row_data[0], "price": row_data[1],
-                               "volume": 0, "item_name": item_name, "item_id": item_id}})
+            d.update({i: {
+                "ts": row_data[0], 
+                "price": row_data[1],
+                "volume": 0, 
+                "item_name": item_name.replace("'",''), 
+                "item_id": item_id
+            }})
         i += 1
     return d
 
@@ -73,7 +78,6 @@ items = items_api.load()
 file_path = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data'
 file_name = 'rswiki'
 
-URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}/Data?action=raw',
-         item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
+URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}/Data?action=raw',item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
 if __name__ == '__main__':
     main()
