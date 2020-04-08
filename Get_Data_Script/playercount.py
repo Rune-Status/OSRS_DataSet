@@ -1,4 +1,4 @@
-
+# env\Scripts\activate
 from bs4 import BeautifulSoup
 import requests
 import json
@@ -27,8 +27,7 @@ def parse_data(resp, d):
     soup = BeautifulSoup(resp.text, 'html.parser')
 
     script_text = soup.findAll('script')[8].get_text()
-    jsonfile = script_text.split('\n')[5].replace(
-        'var db_data = ', '').replace(';', '').strip()
+    jsonfile = script_text.split('\n')[5].replace('var db_data = ', '').replace(';', '').strip()
 
     jsonfile = json.loads(jsonfile)
     i = len(d)

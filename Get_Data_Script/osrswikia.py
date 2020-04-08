@@ -31,8 +31,7 @@ def make_web_call(URL, item_name, item_id):
 
 
 def get_wiki_item_price(r, item_name, item_id, d):
-    data = r.text.replace(' ', '').replace('return{', '').replace(
-        '}', '').replace('\n', '').replace("'", '').split(',')
+    data = r.text.replace(' ', '').replace('return{', '').replace('}', '').replace('\n', '').replace("'", '').split(',')
     i = len(d)
     dts = [row['ts'] for row in d.values() if row['item_id'] == item_id]
     for row in data:
@@ -40,8 +39,13 @@ def get_wiki_item_price(r, item_name, item_id, d):
         if row_data[0] in dts:
             continue
         if len(row_data) == 3:
-            d.update({f"{i}": {"ts": row_data[0], "price": row_data[1],
-                               "volume": row_data[2], "item_name": item_name, "item_id": item_id}})
+            d.update({f"{i}": {
+                "ts": row_data[0], 
+                "price": row_data[1],
+                "volume": row_data[2], 
+                "item_name": item_name, 
+                "item_id": item_id
+            }})
         if len(row_data) == 2:
             d.update({f"{i}": {"ts": row_data[0], "price": row_data[1],
                                "volume": 0, "item_name": item_name, "item_id": item_id}})

@@ -1,3 +1,4 @@
+# env\Scripts\activate
 from osrsbox import items_api
 import concurrent.futures
 import requests
