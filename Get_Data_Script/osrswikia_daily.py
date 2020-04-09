@@ -51,7 +51,7 @@ def get_wiki_item(r, item_name, item_id, d):
 
 
 def main():
-    URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}?action=raw', item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
+    URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}?action=raw', item.name, item.id] for item in items_api.load() if item.tradeable_on_ge and not(item.duplicate)]
     d = load_data(file_path, file_name)
     errors = {}
     with concurrent.futures.ProcessPoolExecutor() as executor:

@@ -77,6 +77,6 @@ items = items_api.load()
 file_path = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data'
 file_name = 'rswiki'
 
-URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}/Data?action=raw',item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
+URLS = [[f'https://oldschool.runescape.wiki/w/Module:Exchange/{item.name}/Data?action=raw',item.name, item.id] for item in items_api.load() if item.tradeable_on_ge and not(item.duplicate)]
 if __name__ == '__main__':
     main()
