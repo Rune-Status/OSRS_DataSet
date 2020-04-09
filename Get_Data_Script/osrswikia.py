@@ -61,8 +61,7 @@ def get_wiki_item_price(r, item_name, item_id, d):
 def main():
     d = load_data(file_path, file_name)
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        future_to_url = {executor.submit(
-            make_web_call, url[0], url[1], url[2]): url for url in URLS}
+        future_to_url = {executor.submit(make_web_call, url[0], url[1], url[2]): url for url in URLS}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
             try:
