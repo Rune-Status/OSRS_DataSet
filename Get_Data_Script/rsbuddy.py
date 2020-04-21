@@ -4,24 +4,26 @@ import concurrent.futures
 import requests
 import json
 import os
+import sqlite3
+from sqlite3 import Error
 
 
-def load_data(file_path, file_name):
-    file_name = os.path.join(file_path, file_name + '.json')
-    if os.path.isfile(file_name):
-        print("File exist")
-        with open(file_name) as json_file:
-            d = json.load(json_file)
-    else:
-        print("File not exist")
-        d = {}
-    return d
+def create_connection(db_file):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+    except Error as e:
+        print(e)
+
+    return conn
 
 
-def save_data(d, file_path, file_name):
-    file_name = os.path.join(file_path, file_name + '.json')
-    with open(file_name, 'w') as fp:
-        json.dump(d, fp)
+def insert_rsbuddy(conn, row):
+    sql = ''' INSERT INTO rsbuddy(item_name,item_id,ts,overallPrice,overallQuantity,buyingPrice,buyingQuantity,sellingPrice,sellingQuantity)
+              VALUES(?,?,?,?,?,?,?,?,?) '''
+    cur = conn.cursor()
+    cur.execute(sql, row)
+    return cur.lastrowid
 
 
 def make_web_call(URL, item_name, item_id):
@@ -30,31 +32,32 @@ def make_web_call(URL, item_name, item_id):
     return r
 
 
-def get_rsbuddy_price(r, item_name, item_id, d):
+def get_rsbuddy_price(r, item_name, item_id):
     data = r.json()
-    i = len(d)
-    dts = [row['ts'] for row in d.values() if row['item_id'] == item_id]
+    database = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data\osrs.db'
+    conn = create_connection(database)
+
     for row in data:
-        if row['ts'] in dts:
-            continue
-        d.update({i: {
-            'item_name': item_name.replace("'",''),
-            'item_id': item_id,
-            'ts': row['ts'],
-            'overallPrice': row['overallPrice'],
-            'overallQuantity': row['overallQuantity'],
-            'buyingPrice': row['buyingPrice'],
-            'buyingQuantity': row['buyingQuantity'],
-            'sellingPrice': row['sellingPrice'],
-            'sellingQuantity': row['sellingQuantity']}
-        })
-        i += 1
-    return d
+        rsbuddy = (
+            item_name.replace("'", ''),
+            item_id,
+            row['ts'],
+            row['overallPrice'],
+            row['overallQuantity'],
+            row['buyingPrice'],
+            row['buyingQuantity'],
+            row['sellingPrice'],
+            row['sellingQuantity'])
+        try:
+            insert_rsbuddy(conn, rsbuddy)
+        except Error:
+            print(f'Got Error: {row["ts"]},{item_id}, {Error}')
+            pass
 
 
 def main(granularity=30):
-    d = load_data(file_path, file_name)
-    URLS = [[f'https://rsbuddy.com/exchange/graphs/{granularity}/{item.id}.json',item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
+    URLS = [[f'https://rsbuddy.com/exchange/graphs/{granularity}/{item.id}.json',
+             item.name, item.id] for item in items_api.load() if item.tradeable_on_ge]
     with concurrent.futures.ProcessPoolExecutor() as executor:
         future_to_url = {executor.submit(
             make_web_call, url[0], url[1], url[2]): url for url in URLS}
@@ -63,13 +66,9 @@ def main(granularity=30):
             try:
                 data = future.result()
                 # Output,item.name, item.id
-                d = get_rsbuddy_price(data, url[1], url[2], d)
+                get_rsbuddy_price(data, url[1], url[2])
             except Exception as exc:
                 print(f'URL: {url}, generated an exception: {exc}')
-    save_data(d, file_path, file_name)
 
-
-file_path = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data'
-file_name = 'rsbuddy'
 if __name__ == '__main__':
     main()
