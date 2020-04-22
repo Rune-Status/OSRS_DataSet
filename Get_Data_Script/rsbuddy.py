@@ -47,7 +47,8 @@ def get_rsbuddy_price(r, item_name, item_id):
             row['buyingPrice'],
             row['buyingQuantity'],
             row['sellingPrice'],
-            row['sellingQuantity'])
+            row['sellingQuantity']
+        )
         try:
             insert_rsbuddy(conn, rsbuddy)
         except Error:
