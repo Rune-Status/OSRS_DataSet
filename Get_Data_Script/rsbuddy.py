@@ -38,7 +38,7 @@ def get_rsbuddy_price(r, item_name, item_id):
     conn = create_connection(database)
 
     for row in data:
-        rsbuddy = (
+        rsbuddy = [
             item_name.replace("'", ''),
             item_id,
             row['ts'],
@@ -48,7 +48,7 @@ def get_rsbuddy_price(r, item_name, item_id):
             row['buyingQuantity'],
             row['sellingPrice'],
             row['sellingQuantity']
-        )
+        ]
         try:
             insert_rsbuddy(conn, rsbuddy)
         except Error:
