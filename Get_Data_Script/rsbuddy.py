@@ -19,7 +19,7 @@ def create_connection(db_file):
 
 
 def insert_rsbuddy(conn, row):
-    sql = ''' INSERT INTO rsbuddy(item_name,item_id,ts,overallPrice,overallQuantity,buyingPrice,buyingQuantity,sellingPrice,sellingQuantity)
+    sql = ''' INSERT or ignore INTO rsbuddy(item_name,item_id,ts,overallPrice,overallQuantity,buyingPrice,buyingQuantity,sellingPrice,sellingQuantity)
               VALUES(?,?,?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, row)
@@ -51,8 +51,8 @@ def get_rsbuddy_price(r, item_name, item_id):
         ]
         try:
             insert_rsbuddy(conn, rsbuddy)
-        except Error:
-            print(f'Got Error: {row["ts"]},{item_id}, {Error}')
+        except Error as e:
+            print(f'Got Error: TS:{row["ts"]},item_id:{item_id}, error:{e}')
             pass
 
 
