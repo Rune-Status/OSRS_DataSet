@@ -6,7 +6,7 @@ import json
 import os
 import sqlite3
 from sqlite3 import Error
-
+import csv
 
 def create_connection(db_file):
     conn = None
@@ -17,15 +17,6 @@ def create_connection(db_file):
 
     return conn
 
-
-def insert_rsbuddy(conn, row):
-    sql = ''' INSERT or ignore INTO rsbuddy(item_name,item_id,ts,overallPrice,overallQuantity,buyingPrice,buyingQuantity,sellingPrice,sellingQuantity)
-              VALUES(?,?,?,?,?,?,?,?,?) '''
-    cur = conn.cursor()
-    cur.execute(sql, row)
-    return cur.lastrowid
-
-
 def make_web_call(URL, item_name, item_id):
     print(f'Requesting: {URL}')
     r = requests.get(URL)
@@ -34,26 +25,30 @@ def make_web_call(URL, item_name, item_id):
 
 def get_rsbuddy_price(r, item_name, item_id):
     data = r.json()
-    database = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data\osrs.db'
-    conn = create_connection(database)
 
+    rsbuddy = []
     for row in data:
-        rsbuddy = [
+        rsbuddy.append([
             item_name.replace("'", ''),
-            item_id,
-            row['ts'],
-            row['overallPrice'],
-            row['overallQuantity'],
-            row['buyingPrice'],
-            row['buyingQuantity'],
-            row['sellingPrice'],
-            row['sellingQuantity']
-        ]
-        try:
-            insert_rsbuddy(conn, rsbuddy)
-        except Error as e:
-            print(f'Got Error: TS:{row["ts"]},item_id:{item_id}, error:{e}')
-            pass
+            int(item_id),
+            int(row['ts']),
+            int(row['overallPrice']),
+            int(row['overallQuantity']),
+            int(row['buyingPrice']),
+            int(row['buyingQuantity']),
+            int(row['sellingPrice']),
+            int(row['sellingQuantity'])
+        ])
+    try:
+        sql = f'INSERT or ignore INTO rsbuddy(item_name,item_id,ts,overallPrice,overallQuantity,buyingPrice,buyingQuantity,sellingPrice,sellingQuantity) VALUES(?,?,?,?,?,?,?,?,?);'
+        cur.executemany(sql,rsbuddy)
+        print(f'Done: {item_id}')
+    except Error as e:
+        print(f'ERROR: item_id: {item_id} ts: {row["ts"]} error:{e}')
+        with open(r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data\rsbuddy_error.csv','a+',newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([rsbuddy,e])
+        pass
 
 
 def main(granularity=30):
@@ -68,8 +63,13 @@ def main(granularity=30):
                 data = future.result()
                 # Output,item.name, item.id
                 get_rsbuddy_price(data, url[1], url[2])
+
             except Exception as exc:
                 print(f'URL: {url}, generated an exception: {exc}')
 
 if __name__ == '__main__':
-    main()
+    database = r'D:\random\python\OSRS_Prices\OSRS_DataSet\OSRS_Data\osrs.db'
+    conn = create_connection(database)
+    cur = conn.cursor()
+    with conn:
+        main()
